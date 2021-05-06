@@ -20,7 +20,7 @@ import PropTypes from 'prop-types';
 
 import {Button} from 'reactstrap';
 
-import defaultImage from './image_placeholder.jpg';
+import defaultImage from './drop-image-here-fix.png';
 
 class ImageUpload extends React.Component {
     onImageBase64Change = undefined;
