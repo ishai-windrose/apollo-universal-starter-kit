@@ -14,100 +14,94 @@
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 */
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 // used for making the prop types of this component
 import PropTypes from 'prop-types';
 
-import {Button} from 'reactstrap';
+import { Button } from 'reactstrap';
 
 import defaultImage from './drop-image-here-fix.png';
 
-class ImageUpload extends React.Component {
-    onImageBase64Change = undefined;
+const ImageUpload = props => {
+  const onImageBase64Change = useRef(props.onImageBase64Change);
+  const file = useRef();
+  const fileInput = useRef();
+  const originalImageBase64 = useRef(props.imageBase64 || defaultImage);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState(props.imageBase64 || defaultImage);
+  const [selectImageMode, setSelectImageMode] = useState(false);
 
-    constructor(props) {
-        super(props);
-        this.state = {
-            file: null,
-            imagePreviewUrl: defaultImage
-        };
-        this.handleImageChange = this.handleImageChange.bind(this);
-        this.handleSubmit = this.handleSubmit.bind(this);
-        this.handleClick = this.handleClick.bind(this);
-        this.handleRemove = this.handleRemove.bind(this);
-        this.onImageBase64Change = props.onImageBase64Change;
+  useEffect(() => {
+    if (!selectImageMode) {
+      if (originalImageBase64.current !== props.imageBase64) {
+        originalImageBase64.current = props.imageBase64 || defaultImage;
+      }
+      if (imagePreviewUrl !== props.imageBase64) {
+        setImagePreviewUrl(props.imageBase64 || defaultImage);
+      }
     }
+  }, [props]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    handleImageChange(e) {
-        e.preventDefault();
-        let reader = new FileReader();
-        let file = e.target.files[0];
-        reader.onloadend = () => {
-            this.setState({
-                file: file,
-                imagePreviewUrl: reader.result
-            });
-            if (this.onImageBase64Change) {
-                this.onImageBase64Change(reader.result);
-            }
-        };
-        reader.readAsDataURL(file);
-    }
+  const handleImageChange = e => {
+    e.preventDefault();
+    // eslint-disable-next-line no-undef
+    let reader = new FileReader();
+    let selectedImage = e.target.files[0];
 
-    handleSubmit(e) {
-        e.preventDefault();
-        // this.state.file is the file/image uploaded
-        // in this function you can save the image (this.state.file) on form submit
-        // you have to call it yourself
-    }
+    reader.onloadend = () => {
+      file.current = selectedImage;
+      setImagePreviewUrl(reader.result);
+    };
+    reader.readAsDataURL(selectedImage);
+  };
 
-    handleClick() {
-        this.refs.fileInput.click();
+  const handleSetImage = () => {
+    if (onImageBase64Change.current) {
+      onImageBase64Change.current(imagePreviewUrl);
+      file.current = null;
     }
+    setSelectImageMode(false);
+  };
 
-    handleRemove() {
-        this.setState({
-            file: null,
-            imagePreviewUrl: defaultImage
-        });
-        this.refs.fileInput.value = null;
-        if (this.onImageBase64Change) {
-            this.onImageBase64Change("");
-        }
-    }
+  const handleSelect = () => {
+    setSelectImageMode(true);
+    fileInput.current.click();
+  };
 
-    render() {
-        return (
-            <div className="fileinput text-center post-image-uploader">
-                <input type="file" onChange={this.handleImageChange} ref="fileInput"/>
-                <div className={'thumbnail' + (this.props.avatar ? ' img-circle' : '')}>
-                    <img src={this.state.imagePreviewUrl} alt="..."/>
-                </div>
-                <div className="image-upload-button-panel">
-                    {this.state.file === null ? (
-                        <Button color="primary" className="select-image-button" onClick={() => this.handleClick()}>
-                            {this.props.avatar ? 'Add Photo' : 'Select image'}
-                        </Button>
-                    ) : (
-                        <span>
-              <Button color="primary" className="btn-round" onClick={() => this.handleClick()}>
-                Change
-              </Button>
-                            {this.props.avatar ? <br/> : null}
-                            <Button color="danger" className="btn-round" onClick={() => this.handleRemove()}>
-                <i className="fa fa-times"/>
-                Remove
-              </Button>
-            </span>
-                    )}
-                </div>
-            </div>
-        );
-    }
-}
+  const handleCancel = () => {
+    file.current = null;
+    setImagePreviewUrl(originalImageBase64.current);
+    fileInput.current.value = null;
+  };
+
+  return (
+    <div className="fileinput text-center post-image-uploader">
+      <input type="file" onChange={handleImageChange} ref={fileInput} />
+      <div className={'thumbnail'}>
+        <img src={imagePreviewUrl} alt="..." />
+      </div>
+      <div className="image-upload-button-panel">
+        {!file.current ? (
+          <Button color="primary" className="select-image-button" onClick={() => handleSelect()}>
+            Select Image
+          </Button>
+        ) : (
+          <span>
+            <Button color="primary" className="btn-round" onClick={() => handleSetImage()}>
+              Set
+            </Button>
+            <Button color="danger" className="btn-round" onClick={() => handleCancel()}>
+              Cancel
+            </Button>
+          </span>
+        )}
+      </div>
+    </div>
+  );
+};
 
 ImageUpload.propTypes = {
-    avatar: PropTypes.bool
+  imageBase64: PropTypes.string,
+  onImageBase64Change: PropTypes.func
 };
 
 export default ImageUpload;

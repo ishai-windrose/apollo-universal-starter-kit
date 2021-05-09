@@ -18,9 +18,9 @@ class PostAdd extends React.Component {
 
 export default graphql(ADD_POST, {
   props: ({ ownProps: { history, navigation }, mutate }) => ({
-    addPost: async (title, content,imageBase64) => {
+    addPost: async (title, content, imageBase64) => {
       let postData = await mutate({
-        variables: { input: { title: title.trim(), content: content.trim(),imageBase64} },
+        variables: { input: { title: title.trim(), content: content.trim(), imageBase64 } },
         optimisticResponse: {
           __typename: 'Mutation',
           addPost: {
